@@ -17,14 +17,23 @@
         var scrollTriggered = 0;
 
         $this.find(opts.itemSelector + ':last').addClass('last-scroll-row');
+        var rowData = $('.last-scroll-row').data(); // cache for first "last row"
 
         $(window).on('scroll', function() {
             var row = $('.last-scroll-row');
             if (row.length && !scrollTriggered && isScrolledIntoView(row)) {
                 scrollTriggered = 1;
+                opts.extra = $.extend(opts.extra, rowData);
                 triggerDataLoad();
             }
         });
+        
+        $.fn.infiniteScroll.resetPage = function(){
+            currentScrollPage = 1;
+        }
+        $.fn.infiniteScroll.setExtra = function(data){
+            opts.extra = $.extend(opts.extra, data);
+        }
 
         function isScrolledIntoView(elem) {
             var docViewTop = $(window).scrollTop();
@@ -52,7 +61,8 @@
             if (jQuery.isFunction(opts.onDataLoading)) {
                 opts.onDataLoading(currentScrollPage);
             }
-            $.get(opts.dataPath + '?page=' + currentScrollPage)
+            params = $.extend(opts.extra, {page: currentScrollPage});
+            $.get(opts.dataPath, params)
                 .always(onDataLoaded)
                 .fail(function() {
                     if (jQuery.isFunction(opts.onDataError)) {
